@@ -1,0 +1,14 @@
+name: obs_trigger_release
+
+on:
+  push:
+    tags:
+      - 'v**'
+
+jobs:
+  obs_trigger:
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        curl -H "Authorization: Token ${{ secrets.OBS_TOKEN }}" -X POST "https://build.opensuse.org/trigger/runservice?project=home:p4edge&package=p4edge-web"
+        curl -H "Authorization: Token ${{ secrets.OBS_TOKEN }}" -X POST "https://build.opensuse.org/trigger/runservice?project=home:p4edge:testing&package=p4edge-web"
