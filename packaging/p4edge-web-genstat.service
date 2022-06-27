@@ -7,7 +7,7 @@ Type=simple
 User=root
 Group=www-data
 WorkingDirectory=/srv/p4edge
-ExecStart=/usr/bin/python3 generate-statisctics.py
+ExecStart=/usr/bin/python3 generate-statistics.py
 
 [Install]
 WantedBy=multi-user.target
