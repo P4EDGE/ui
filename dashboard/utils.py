@@ -140,8 +140,12 @@ def set_t4p4s_switch(example):
 
 
 def restart_t4p4s_service():
-    subprocess.call(["systemctl","stop","bmv2.service"])
-    subprocess.call(["systemctl","disable","bmv2.service"])
+    try:
+        subprocess.call(["systemctl","stop","bmv2.service"])
+        subprocess.call(["systemctl","disable","bmv2.service"])
+    except:
+        pass
+
     try:
         subprocess.check_call(["systemctl", "enable", "t4p4s.service"])
         subprocess.check_call(["systemctl", "restart", "t4p4s.service"])
@@ -150,8 +154,12 @@ def restart_t4p4s_service():
 
 
 def restart_bmv2_service():
-    subprocess.call(["systemctl","stop","t4p4s.service"])
-    subprocess.call(["systemctl","disable","t4p4s.service"])
+    try:
+        subprocess.call(["systemctl","stop","t4p4s.service"])
+        subprocess.call(["systemctl","disable","t4p4s.service"])
+    except:
+        pass
+
     try:
         subprocess.check_call(["systemctl", "enable", "bmv2.service"])
         subprocess.check_call(["systemctl", "restart", "bmv2.service"])
