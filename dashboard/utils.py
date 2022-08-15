@@ -6,6 +6,7 @@ from pathlib import Path
 import pycountry
 
 t4p4s_location = '/root/t4p4s'
+bmv2_location = '/root/bmv2'
 
 def update_dhcpcd_config(static_ip_address):
     dhcpcd_conf_fd = Path('/etc/dhcpcd.conf')
@@ -160,11 +161,12 @@ def restart_bmv2_service():
 
 
 def upload_p4_program(p4_code_base64, compiler):
-    Path(f'{t4p4s_location}/examples/uploaded_switch.p4').write_text(base64.b64decode(p4_code_base64))
-    set_t4p4s_switch('uploaded_switch')
-
     if compiler=="T4P4S":
+        Path(f'{t4p4s_location}/examples/uploaded_switch.p4').write_text(base64.b64decode(p4_code_base64))
+        set_t4p4s_switch('uploaded_switch')
         restart_t4p4s_service()
     else:
+        Path(f'{bmv2_location}/examples/uploaded_switch.p4').write_text(base64.b64decode(p4_code_base64))
+        set_t4p4s_switch('uploaded_switch') 
         restart_bmv2_service()
 
