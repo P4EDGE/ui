@@ -31,23 +31,33 @@ def switch(request):
             if field not in post_data:
                 return JsonResponse({'success': False, 'message': f'Missing {field} filed'})
 
-        examples = ['l2switch', 'calc', 'reflector', 'firewall', 'stateful', 'basic_mirror', 'arp_icmp']
-        if post_data['program'] in examples:
-            utils.set_t4p4s_switch(post_data['program'])
-            utils.restart_t4p4s_service()
-        elif post_data['program'] == 'custom':
-            utils.update_t4p4s_opts_dpdk(
-                eal_opts='-c 0x01 -n 4 --no-pci --vdev net_pcap0,iface=veth0 --vdev net_pcap1,iface=veth1',
-                cmd_opts='-p 0x0 --config "\"(0,0,0),(1,0,0)\""'
-            )
+        examples = ['l2switch', 'l2switchbmv2', 'calc', 'reflector', 'firewall', 'stateful', 'basic_mirror', 'arp_icmp']
+        if post_data['compiler']=='T4P4S':
+            if post_data['program'] in examples:
+                utils.set_t4p4s_switch(post_data['program'])
+                utils.restart_t4p4s_service()
+            elif post_data['program'] == 'custom':
+                utils.update_t4p4s_opts_dpdk(
+                    eal_opts='-c 0x01 -n 4 --no-pci --vdev net_pcap0,iface=veth0 --vdev net_pcap1,iface=veth1',
+                    cmd_opts='-p 0x0 --config "\"(0,0,0),(1,0,0)\""'
+                )
 
-            utils.update_t4p4s_examples(
-                'arch=dpdk hugepages=1024 model=v1model smem vethmode pieal piports'
-            )
+                utils.update_t4p4s_examples(
+                    'arch=dpdk hugepages=1024 model=v1model smem vethmode pieal piports'
+                )
 
-            utils.upload_p4_program(post_data['src'])
+                utils.upload_p4_program(post_data['src'], 'T4P4S')
+            else:
+                return JsonResponse({'success': False, 'message': 'Not recognized T4P4S example'})
         else:
-            return JsonResponse({'success': False, 'message': 'Not recognized T4P4S example'})
+            if post_data['program'] in examples:
+                utils.set_t4p4s_switch(post_data['program'])
+                utils.restart_bmv2_service()
+            elif post_data['program'] == 'custom':
+                utils.upload_p4_program(post_data['src'], 'BMv2')
+            else:
+                return JsonResponse({'success': False, 'message': 'Not recognized T4P4S example'})
+ 
     return JsonResponse({'success': True})
 
 def get_database_data(name):
