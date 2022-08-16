@@ -138,6 +138,17 @@ def update_t4p4s_examples(dpdk_opts):
 def set_t4p4s_switch(example):
     Path('/root/t4p4s-switch').write_text(example)
 
+def stop_t4p4s_service():
+    try:
+        subprocess.call(["systemctl","stop","t4p4s.service"])
+    except:
+        pass
+
+def stop_bmv2_service():
+    try:
+        subprocess.call(["systemctl","stop","bmv2.service"])
+    except:
+        pass
 
 def restart_t4p4s_service():
     try:

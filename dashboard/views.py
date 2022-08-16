@@ -47,6 +47,9 @@ def switch(request):
                 )
 
                 utils.upload_p4_program(post_data['src'], 'T4P4S')
+            elif post_data['program'] == 'kill_service':
+                print("stop t4p4s")
+                utils.stop_t4p4s_service()
             else:
                 return JsonResponse({'success': False, 'message': 'Not recognized T4P4S example'})
         else:
@@ -55,6 +58,8 @@ def switch(request):
                 utils.restart_bmv2_service()
             elif post_data['program'] == 'custom':
                 utils.upload_p4_program(post_data['src'], 'BMv2')
+            elif post_data['program'] == 'kill_service':
+                utils.stop_bmv2_service()
             else:
                 return JsonResponse({'success': False, 'message': 'Not recognized T4P4S example'})
  
