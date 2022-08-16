@@ -1,5 +1,15 @@
 import subprocess
 import json
+import socketio
+import signal
+import pty
+import eventlet
+import select
+import subprocess
+import struct
+import fcntl
+import termios
+import os
 
 from django.http.response import JsonResponse
 from django.contrib.auth import authenticate
@@ -16,6 +26,35 @@ from django import template
 from .forms import LoginForm, SignUpForm, CustomPasswordChangeForm
 from .forms import AccessPointSettingsForm
 from . import utils
+
+from terminal.views import sio
+
+task = None
+stop = False
+
+def forward_service_output():
+    #TODO: save last start, to be the --since filter
+    global stop
+    proc = subprocess.Popen(["journalctl", "-f", "-o", "cat", "SYSLOG_IDENTIFIER=t4p4s-start", "--no-pager", "-S", "now"], stdout=subprocess.PIPE)
+    while True:
+        sio.sleep(0.01)
+        if stop:
+            proc.kill()
+            return
+        line = proc.stdout.readline().decode()
+        if line == '' and proc.stdout.at_eof():
+            break
+        sio.emit("switch_output", {"output": line})
+
+@sio.event
+def post_connect(sid):
+    global task
+    global stop
+    if task:
+        stop = True
+        task.join()
+        stop = False
+    task = sio.start_background_task(target=forward_service_output)
 
 @login_required(login_url="/login")
 def switch(request):

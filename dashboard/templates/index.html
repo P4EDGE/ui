@@ -4,6 +4,7 @@
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}
+  <script src="/static/socket.io.js"></script>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -57,6 +58,9 @@
                                                 </div>
 
                                                 <hr>
+                                                <div class="form-group">
+                                                    <textarea id="switch-log" cols="100" rows="20"></textarea>
+                                                </div>
                                                 <button type="button" class="btn btn-primary" onclick="run()">
                                                     <i class="feather icon-play"></i>Run
                                                 </button>
@@ -82,6 +86,21 @@
 {% block javascripts %}
 
 <script>
+    const log = document.getElementById("switch-log");
+    var socket = io.connect({transports: ["websocket", "polling"]});
+
+    socket.on("connect", () => {
+        console.log("switch connected");
+	socket.emit("post_connect");
+    });
+
+    socket.on("switch_output", (output) => {
+        log.value += output["output"];
+        if(log.selectionStart == log.selectionEnd) {
+            log.scrollTop = log.scrollHeight;
+        }
+    });
+
     csrftoken = getCookie('csrftoken');
 
     $('#p4-program').on('change', () => {
@@ -103,6 +122,7 @@
     }
 
     function run() {
+        log.value = ''
         const compiler = $('#compiler').val();
         const program = $('#p4-program').val();
 
@@ -120,6 +140,7 @@
             src: ''
         });
     }
+
     function upload() {
         const compiler = $('#compiler').val();
         const program = $('#p4-program').val();
