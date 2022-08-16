@@ -37,12 +37,12 @@ def cpu_usage():
     insert('cpu_usage',get_timestamp(),cpu_usage)
 
 def cpu_temp():
-    cpu_comm = "sensors |grep 'temp1' |awk '{print $2}'|sed 's/\+//g;s/°C//g'"
+    cpu_comm = "sensors |grep 'temp1'| head -1 |awk '{print $2}'|sed 's/\+//g;s/°C//g'"
     cpu_value = subprocess.check_output(cpu_comm, shell=True)
     insert('cpu_temp',get_timestamp(),float(cpu_value))
 
 def disk_percent():
-    cmd_uptime = "df -h |grep /dev/root| awk '{print $5}'| sed 's/%//g'"
+    cmd_uptime = "df -h |grep '/dev/root\|/dev/sda5'| awk '{print $5}'| sed 's/%//g'"
     hdd_data = subprocess.check_output(cmd_uptime, shell=True)
     insert('hdd_percent',get_timestamp(),float(hdd_data))
 
@@ -56,6 +56,14 @@ def percent_mem():
     insert('perecent_mem',get_timestamp(),mem_percent)
 
 def wifi_stat():
+    is_wifi_cmd = "ip address show | grep wlan0"
+    is_wifi = True
+    try:
+        subprocess.check_output(is_wifi_cmd, shell=True)
+    except subprocess.CalledProcessError:
+        is_wifi = False
+    if not is_wifi:
+        return
     wifi_up = "ifstat -i wlan0 -b -n 1 1 | awk 'NR>2 {print $1}'"
     w_up = subprocess.check_output(wifi_up, shell=True)
     wifi_down = "ifstat -i wlan0 -b -n 1 1 | awk 'NR>2 {print $2}'"
@@ -64,9 +72,15 @@ def wifi_stat():
     insert('wifi_down',get_timestamp(),float(w_down)/1000.0)
 
 def eth_stat():
-    eth_up = "ifstat -i eth0 -b -n 1 1 | awk 'NR>2 {print $1}'"
+    is_eth_cmd = "ip address show | grep eth0"
+    eth = "eth0"
+    try:
+        subprocess.check_output(is_eth_cmd, shell=True)
+    except subprocess.CalledProcessError:
+        eth = "enp1s0"
+    eth_up = f"ifstat -i {eth} -b -n 1 1 | awk 'NR>2 {{print $1}}'"
     e_up = subprocess.check_output(eth_up, shell=True)
-    eth_down = "ifstat -i eth0 -b -n 1 1 | awk 'NR>2 {print $2}'"
+    eth_down = f"ifstat -i {eth} -b -n 1 1 | awk 'NR>2 {{print $2}}'"
     e_down = subprocess.check_output(eth_down, shell=True)
     insert('eth_up',get_timestamp(),float(e_up)/1000.0)
     insert('eth_down',get_timestamp(),float(e_down)/1000.0)
