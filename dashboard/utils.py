@@ -21,11 +21,11 @@ def update_dhcpcd_config(static_ip_address):
 
 
 def update_dnsmasq_config(range_min, range_max, lease):
-    dnsmasq_conf_fd = Path('/etc/dnsmasq.conf')
+    dnsmasq_conf_fd = Path('/etc/dnsmasq.d/p4edge.conf')
     lines = dnsmasq_conf_fd.read_text()
     lines = re.sub(
-        r'(interface=wlan0.*)(dhcp-range=.*?)$',
-        f'\\g<1>dhcp-range={range_min},{range_max},{lease}',
+        r'(interface=br0.*)(dhcp-range=.*?)$',
+        f'\\g<1>dhcp-range=set:br0,{range_min},{range_max},255.255.255.0,{lease}',
         lines, flags=re.DOTALL | re.MULTILINE)
     dnsmasq_conf_fd.write_text(lines)
 
@@ -137,6 +137,13 @@ def update_t4p4s_examples(dpdk_opts):
 
 def set_t4p4s_switch(example):
     Path('/root/t4p4s-switch').write_text(example)
+
+
+def restart_web_service():
+    try:
+        subprocess.call(["systemctl","restart","p4edge-web.service"])
+    except:
+        pass
 
 def stop_t4p4s_service():
     try:

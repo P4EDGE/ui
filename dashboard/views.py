@@ -218,6 +218,8 @@ def access_point_settings(request):
                 except subprocess.CalledProcessError:
                     context['errors'].append('Failed to restart hostapd service')
 
+            utils.restart_web_service()
+
         return HttpResponse(html_template.render(context, request))
 
 
