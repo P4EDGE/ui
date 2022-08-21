@@ -7,54 +7,63 @@ from django import forms
 from .utils import get_countries
 
 def GetCurrentHostapdSettings(field):
-    with open('/etc/hostapd/hostapd.conf','r') as f:
-        for line in f.readlines():
-            if len(line)==0 or line[0]=='#':
-                continue
-            t=line.split('=')
-            if len(t)<1:
-                continue
-            if t[0]==field:
-                if len(t)==1:
-                    return ""
-                else:
-                    return t[1]
+    try:
+        with open('/etc/hostapd/hostapd.conf','r') as f:
+            for line in f.readlines():
+                if len(line)==0 or line[0]=='#':
+                    continue
+                t=line.split('=')
+                if len(t)<1:
+                    continue
+                if t[0]==field:
+                    if len(t)==1:
+                        return ""
+                    else:
+                        return t[1]
+    except:
+        pass
     return ""
 
 
 def GetStaticIpAddress():
-    with open('/etc/dhcpcd.conf', 'r') as f:
-        for line in f.readlines():
-            if len(line)==0 or line[0]=='#':
-                continue
-            if 'static ip_address' in line:
-                t = line.split("=")
-                if len(t)<2:
-                    return ""
-                else:
-                    return t[1]
+    try:
+        with open('/etc/dhcpcd.conf', 'r') as f:
+            for line in f.readlines():
+                if len(line)==0 or line[0]=='#':
+                    continue
+                if 'static ip_address' in line:
+                    t = line.split("=")
+                    if len(t)<2:
+                        return ""
+                    else:
+                        return t[1]
+    except:
+        pass
     return ""
 
 def GetDHCPSettings(field, fid=-1):
-    with open('/etc/dnsmasq.d/p4edge.conf','r') as f:
-        for line in f.readlines():
-            if len(line)==0 or line[0]=='#':
-                continue
-            t=line.split('=')
-            if len(t)<1:
-                continue
-            if t[0]==field:
-                if len(t)==1:
-                    return ""
-                else:
-                    if fid!=-1:
-                        subt = t[1].split(',')
-                        if len(subt)<=fid:
-                            return ""
-                        else:
-                            return subt[fid]
+    try:
+        with open('/etc/dnsmasq.d/p4edge.conf','r') as f:
+            for line in f.readlines():
+                if len(line)==0 or line[0]=='#':
+                    continue
+                t=line.split('=')
+                if len(t)<1:
+                    continue
+                if t[0]==field:
+                    if len(t)==1:
+                        return ""
                     else:
-                        return t[1]
+                        if fid!=-1:
+                            subt = t[1].split(',')
+                            if len(subt)<=fid:
+                                return ""
+                            else:
+                                return subt[fid]
+                        else:
+                            return t[1]
+    except:
+        pass
     return ""
 
 
