@@ -76,7 +76,7 @@ def switch(request):
             if field not in post_data:
                 return JsonResponse({'success': False, 'message': f'Missing {field} filed'})
 
-        examples = ['l2switch', 'l2switchbmv2', 'calc', 'reflector', 'firewall', 'stateful', 'basic_mirror', 'arp_icmp']
+        examples = ['l2switch', 'calc', 'reflector', 'traffic_filter', 'stateful_firewall', 'basic_mirror', 'arp_icmp']
         if post_data['compiler']=='T4P4S':
             if post_data['program'] in examples:
                 utils.set_t4p4s_switch(post_data['program'])
