@@ -61,7 +61,7 @@
                                                 <div class="form-group">
                                                     <textarea id="switch-log" cols="100" rows="20"></textarea>
                                                 </div>
-                                                <button type="button" class="btn btn-primary" onclick="run()">
+                                                <button type="button" class="btn btn-primary" onclick="setTimeout(run, 0)">
                                                     <i class="feather icon-play"></i>Run
                                                 </button>
                                                 <button type="button" class="btn btn-primary" onclick="kill()">
@@ -86,13 +86,10 @@
 {% block javascripts %}
 
 <script>
+    csrftoken = getCookie('csrftoken');
     const log = document.getElementById("switch-log");
     var socket = io.connect({transports: ["websocket", "polling"]});
-
-    socket.on("connect", () => {
-        console.log("switch connected");
-	socket.emit("post_connect");
-    });
+    socket.emit("page_loaded")
 
     socket.on("switch_output", (output) => {
         log.value += output["output"];
@@ -101,7 +98,6 @@
         }
     });
 
-    csrftoken = getCookie('csrftoken');
 
     $('#p4-program').on('change', () => {
         const val = $('#p4-program').val();
@@ -122,7 +118,6 @@
     }
 
     function run() {
-        log.value = ''
         const compiler = $('#compiler').val();
         const program = $('#p4-program').val();
 
@@ -133,12 +128,14 @@
         if (program == null || program == '') {
             return;
         }
+        log.value = ''
 
-        sendPostRequest("{% url 'switch' %}", {
+        const asd = sendPostRequest("{% url 'switch' %}", {
             compiler: compiler,
             program: program,
             src: ''
         });
+	console.log(asd)
     }
 
     function upload() {

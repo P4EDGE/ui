@@ -33,27 +33,33 @@ task = None
 stop = False
 
 def forward_service_output():
-    #TODO: save last start, to be the --since filter
     global stop
-    proc = subprocess.Popen(["journalctl", "-f", "-o", "cat", "SYSLOG_IDENTIFIER=t4p4s-start", "--no-pager", "-S", "now"], stdout=subprocess.PIPE)
+    global proc
+
+    invoc = subprocess.check_output(["/bin/sh", "-c", "if [ $(systemctl show -p InvocationID --value t4p4s.service | head -c1 | wc -l) -eq 0 ]; then systemctl show -p InvocationID --value t4p4s.service; else systemctl show -p InvocationID --value bmv2.service; fi"])
+    proc = subprocess.Popen(["journalctl", "-f", "-n", "all", "-o", "cat", "SYSLOG_IDENTIFIER=t4p4s-start", "SYSLOG_IDENTIFIER=bmv2-start", "--no-pager", f"_SYSTEMD_INVOCATION_ID={invoc.decode().rstrip()}"], stdout=subprocess.PIPE)
+
+    stop = False
     while True:
         sio.sleep(0.01)
         if stop:
             proc.kill()
             return
-        line = proc.stdout.readline().decode()
-        if line == '' and proc.stdout.at_eof():
-            break
-        sio.emit("switch_output", {"output": line})
+
+        (data_ready, _, _) = select.select([proc.stdout], [], [], 0)
+        if data_ready:
+            line = proc.stdout.readline().decode()
+            if line == '' and proc.stdout.at_eof():
+                break
+            sio.emit("switch_output", {"output": line})
 
 @sio.event
-def post_connect(sid):
+def page_loaded(sid):
     global task
     global stop
     if task:
         stop = True
         task.join()
-        stop = False
     task = sio.start_background_task(target=forward_service_output)
 
 @login_required(login_url="/login")
@@ -75,6 +81,8 @@ def switch(request):
             if post_data['program'] in examples:
                 utils.set_t4p4s_switch(post_data['program'])
                 utils.restart_t4p4s_service()
+                page_loaded(0)
+
             elif post_data['program'] == 'custom':
                 utils.update_t4p4s_opts_dpdk(
                     eal_opts='-c 0x01 -n 4 --no-pci --vdev net_pcap0,iface=veth0 --vdev net_pcap1,iface=veth1',
@@ -87,7 +95,6 @@ def switch(request):
 
                 utils.upload_p4_program(post_data['src'], 'T4P4S')
             elif post_data['program'] == 'kill_service':
-                print("stop t4p4s")
                 utils.stop_t4p4s_service()
             else:
                 return JsonResponse({'success': False, 'message': 'Not recognized T4P4S example'})
@@ -95,13 +102,15 @@ def switch(request):
             if post_data['program'] in examples:
                 utils.set_t4p4s_switch(post_data['program'])
                 utils.restart_bmv2_service()
+                page_loaded(0)
+
             elif post_data['program'] == 'custom':
                 utils.upload_p4_program(post_data['src'], 'BMv2')
             elif post_data['program'] == 'kill_service':
                 utils.stop_bmv2_service()
             else:
-                return JsonResponse({'success': False, 'message': 'Not recognized T4P4S example'})
- 
+                return JsonResponse({'success': False, 'message': 'Not recognized BMv2 example'})
+
     return JsonResponse({'success': True})
 
 def get_database_data(name):
